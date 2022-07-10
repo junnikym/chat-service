@@ -5,6 +5,8 @@
 TCP 연결을 통해 클라이언트와 서버 사이에 전이중 양방향 통신 (full duplex, 2-way communication); <br/>
 HTTP와 다른 TCP 방식으로 작동하지만, HTTP에서 동작 가능하도록 설계되었다. 
 
+* ref : <https://stackoverflow.com/questions/16945345/differences-between-tcp-sockets-and-web-sockets-one-more-time>
+
 HTTP Request를 그대로 사용하기 때문에 기존의 80, 443 포트로 접속을 하므로 추가 방화벽을 열지 않고도 양방향 통신이 가능하고, HTTP 규격인 CORS 적용이나 인증 등.. 과정을 기존과 동일하게 가져갈 수 있다.
 
 ### 연결 과정
@@ -153,3 +155,98 @@ public void registerWebSocketHandlers (WebSocketHandlerRegistry registry) {
 
 * ref : <https://docs.spring.io/spring-framework/docs/5.2.6.RELEASE/spring-framework-reference/web.html#websocket-fallback>
 
+## STOMP 
+
+<code>STOMP</code><sub><code>Simple Text Oriented Messaging Protocol</code></sub>는 메시지를 효율적으로 전송하기 위해 탄생한 프로토콜이다.
+WebSocket 위에서 돌아가는 프로토콜이며 서버가 전송할 메시지의 유형, 형식, 내용을 정의하는 메커니즘이며 <code>pub/sub</code> 구조로 동작.
+
+메시지 전송을 위한 프로토콜 (AMQP, MQTT, ..) 은 존재하지만 <code>STOMP</code>와 차이점은 Binary가 아닌 <code>Text 기반</code>의 프로토콜이라는 점이다.
+
+* ref : <https://velog.io/@qkrqudcks7/STOMP란>
+* ref : <https://warpgate3.tistory.com/entry/STOMPSimpleStream-Text-Oriented-Message-Protocol>
+
+STOMP는 only WebSocket 만을 위한 프로토콜은 아니다. 다른 몇몇 양방향 통신에서도 활용가능하다. 
+ 
+WebSocket은 Binary, Text 타입의 메시지를 주고 받을 수 있지만, 따로 형식이 정해진것은 아니다.
+그렇기 때문에 따로 주고받을 메시지에 대한 형식을 정해야하며 파싱로직 또한 구현을 해줘야한다.
+
+Spring에서 STOMP를 사용하면 좋은점은 다음과 같다.
+
+1. 하위 프로토콜, 컨벤션을 따로 정의할 필요 없다.
+2. 연결 주소마다 새로운 Handler를 구현하고 설정해줄 필요 없다.
+3. Spring Security를 사용할 수 있다.
+4. 외부 Messaging Queue를 사용할 수 있다.
+
+* ref : <https://velog.io/@guswns3371/WebSocket-Spring>
+
+### Frame
+
+STOMP에서 통신 시 쓰이는 Frame은 다음과 같다
+
+```
+COMMAND         | SEND, SUBSCRIBE 등.. 명령
+                |
+header1:value1  | REST의 Header와 같이
+header2:value2  | 부가 정보를 나타냄
+                |
+Body^@          | 매시지 내용
+```
+
+### Flow
+
+![stomp flow](./img/stompFlow.png)
+
+```java
+@Configuration
+@EnableWebSocketMessageBroker
+public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
+
+	@Override
+	public void configureMessageBroker(MessageBrokerRegistry registry) {
+		registry.enableSimpleBroker("/queue","/topic");
+		registry.setApplicationDestinationPrefixes("/app");
+	}
+
+	@Override
+	public void registerStompEndpoints(StompEndpointRegistry registry) {
+		registry.addEndpoint("/blar-blar")
+				.withSockJS();
+	}
+
+}
+```
+
+Configuration Class에 <code>@EnableWebSocketMessageBroker</code> 적용과 <code>WebSocketMessageBrokerConfigurer</code> 상속을 해줌으로써
+STOMP에 대한 설정을 할 수 있다. 
+
+ - configureMessageBroker : Message Broker에 대한 설정이다.
+   - enableSimpleBroker - 해당 메소드를 통해 내장 브로커를 사용할 수 있다.
+     - 해당 메소드를 통해 prefix url을 설정해주면, prefix를 가진 url로 메시지가 발행될 때 브로커가 이를 처리해준다.
+   - setApplicationDestinationPrefixes - Message Handler로 routing 되는 prefix url
+ - registerStompEndpoints : WebSocket의 addHandler와 유사하다.
+   - addEndpoint - 해당 메소드를 통해 WebSocket Handshaking이 진행된다.
+   - withSockJS - WebSocket에서 withSockJS()와 동일하다.
+ 
+* 단 registerStompEndpoints와 같은 경우 Configuration 에서 지정할 필요없이 <code>Controller</code>에서 지정이 가능하다
+
+```java
+@Controller
+public class ChatController {
+
+	@MessageMapping("/hi")
+	@SendTo("/topic/hi")
+	public String hi(String message) throws Exception {
+		return "hi! " + message;
+	}
+
+}
+```
+
+<code>@MessageMapping</code>에 설정된 url을 호출 시 <code>Broadcast</code>로 보내지며, <br/>
+<code>@SendTo</code>에 설정된 url을 호출 시 <code>Subscriber</code>에게 전달된다.
+
+Client와 관련된 코드는 [여기](https://spring.io/guides/gs/messaging-stomp-websocket/) 에서 얻을 수 있었다
+
+* ref : <https://velog.io/@guswns3371/WebSocket-Spring>
+
+![result of STOMP practice](./img/stompPractice.jpg)
