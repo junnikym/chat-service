@@ -124,3 +124,32 @@ registry.setAllowedOrigins("*");
         
 registry.setAllowedOrigins("https://somedomain.com");
 ```
+
+## SockJS
+
+WebSocket 통신을 모든 브라우저에서 지원하지는 않는다. <br/>
+Server와 Client 중간에 위치한 Proxy가 Upgrade헤더를 해석하지 못해 서버에 전달하지 못할 수 있으며 <br/>
+오랜시간 Idle 상태로 지속된 Connection이 지워질 수 있다. 
+
+이러한 경우 WebSocket을 대체하기위해 다른 방식을 사용하여 통신을 지속해야한다. 이때, <code>WebSocket Emulation</code>을 이용하여 
+<code>Http Streaming</code>, <code>Long Pulling</code>과 같은 Http 기반의 방식으로 WebSocket과 같은 흉내를 낼 수 있다.
+
+> Javascript 진영의 <code>Socket.io</code>와 같은 개념이다.
+
+SockJS를 적용하기위해서는 Configuration에서 WebSocketHandler를 등록할때 <code>withSockJS()</code> 멤버 메소드를 사용하여 적용이 가능하다.
+
+```java
+@Override
+public void registerWebSocketHandlers (WebSocketHandlerRegistry registry) {
+    registry
+            .addHandler(chatWebSocketHandler(), CHAT_WS_PATH)
+            .setAllowedOrigins("*")
+            .addInterceptors(new HttpSessionHandshakeInterceptor())
+            .withSockJS();  // <- 적용
+}
+```
+
+(더 다양한 환경에서 SockJS 설정방법은 아래 링크를 참고)
+
+* ref : <https://docs.spring.io/spring-framework/docs/5.2.6.RELEASE/spring-framework-reference/web.html#websocket-fallback>
+

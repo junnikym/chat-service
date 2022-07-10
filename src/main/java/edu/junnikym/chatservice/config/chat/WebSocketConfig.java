@@ -21,7 +21,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
 		registry
 				.addHandler(chatWebSocketHandler(), CHAT_WS_PATH)
 				.setAllowedOrigins("*")
-				.addInterceptors(new HttpSessionHandshakeInterceptor());
+				.addInterceptors(new HttpSessionHandshakeInterceptor())
+				.withSockJS();
 	}
 
 	@Bean
