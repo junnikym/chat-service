@@ -1,4 +1,5 @@
 var stompClient = null;
+var topicChannel  = '';
 
 function setConnected(connected) {
 	$("#connect").prop("disabled", connected);
@@ -12,14 +13,15 @@ function setConnected(connected) {
 	$("#greetings").html("");
 }
 
-function connect() {
-	console.log("hi");
+function connect(channel) {
+	topicChannel = channel;
+	console.log(topicChannel);
 	var socket = new SockJS('/chat');
 	stompClient = Stomp.over(socket);
 	stompClient.connect({}, function (frame) {
 		setConnected(true);
 		console.log('Connected: ' + frame);
-		stompClient.subscribe('/topic/hi', function (greeting) {
+		stompClient.subscribe('/topic/hi.'+topicChannel, function (greeting) {
 			showGreeting(greeting.body);
 		});
 	});
@@ -34,7 +36,8 @@ function disconnect() {
 }
 
 function sendName() {
-	stompClient.send("/app/hi", {}, JSON.stringify({'name': $("#name").val()}));
+	console.log(topicChannel);
+	stompClient.send("/app/hi."+topicChannel, {}, JSON.stringify({'name': $("#name").val()}));
 }
 
 function showGreeting(message) {
@@ -45,7 +48,8 @@ $(function () {
 	$("form").on('submit', function (e) {
 		e.preventDefault();
 	});
-	$( "#connect" ).click(function() { connect(); });
+	$( "#connect-a" ).click(function() { connect("a"); });
+	$( "#connect-b" ).click(function() { connect("b"); });
 	$( "#disconnect" ).click(function() { disconnect(); });
 	$( "#send" ).click(function() { sendName(); });
 });

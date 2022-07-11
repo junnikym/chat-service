@@ -250,3 +250,42 @@ Client와 관련된 코드는 [여기](https://spring.io/guides/gs/messaging-sto
 * ref : <https://velog.io/@guswns3371/WebSocket-Spring>
 
 ![result of STOMP practice](./img/stompPractice.jpg)
+
+### Destination Variable
+
+```java
+@MessageMapping("hi/{to}")
+public String hi(HiDto message) throws Exception {
+    return "안녕! " + message.getName();
+}
+```
+
+다음과 같이 <code>Placeholder</code>를 설정하여 보내고자하는 대상을 나눌 수 있다.
+
+만약 <code>/topic/hi/a</code>를 subscribe 했다면 <code>app/hi/a</code>를 해야만 메시지를 얻을 수 있다.   
+<code>app/hi/b</code>와 같이 발송을 했다면 메시지를 받지 못한다.
+
+```java
+@MessageMapping("hi/{to}")
+public String hi(@DestinationVariable("to") String to, HiDto message) throws Exception {
+    return "안녕! " + message.getName() + "(" + to + ")";
+}
+```
+
+다음과 같이 <code>@DestinationVariable</code> 어노테이션으로 Parameter를 받는다면 <code>Placeholder</code>의 데이터를 변수를 통해 알 수 있다.
+
+```java
+@Override
+public void configureMessageBroker(MessageBrokerRegistry registry) {
+    registry.setPathMatcher(new AntPathMatcher("."));
+    registry.enableSimpleBroker("/queue","/topic");
+    registry.setApplicationDestinationPrefixes("/app");
+}
+```
+
+Configuration 중, <code>setPathMatcher</code> 메소드를 통해 <code>'.'를 통해 분리한다</code>라는 설정을 해주면
+path를 <code>@MessageMapping("hi.{to}")</code>와 같이 설정이 가능하다.
+
+ * <code>@SendTo</code> 어노테이션은 해당 기능을 지원하지 않는다.
+
+![result of STOMP practice](./img/stompDestinationVariable.jpg)
