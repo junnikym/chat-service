@@ -1,0 +1,33 @@
+version: "3.9"  # optional since v1.27.0
+services:
+
+  database:
+    image: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql_password
+      MYSQL_USER: junnikym
+      MYSQL_PASSWORD: mysql_password
+      MYSQL_DATABASE: chat-db
+    command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
+    ports:
+        - "3306:3306"
+    networks:
+        - chat-service-network-1
+
+  chat-service:
+    build:
+        context: .
+        dockerfile: Dockerfile
+    image: chat-service:latest
+    ports:
+        - "8080:8080"
+    restart: on-failure
+    links:
+        - database
+    depends_on:
+        - database
+    networks:
+        - chat-service-network-1
+
+networks:
+  chat-service-network-1:
