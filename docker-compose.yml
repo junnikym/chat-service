@@ -2,17 +2,17 @@ version: "3.9"  # optional since v1.27.0
 services:
 
   database:
-    image: mysql
+    image: mysql:8
     environment:
       MYSQL_ROOT_PASSWORD: mysql_password
       MYSQL_USER: junnikym
       MYSQL_PASSWORD: mysql_password
-      MYSQL_DATABASE: chat-db
+      MYSQL_DATABASE: chat_db
     command: ['--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci']
     ports:
         - "3306:3306"
-    networks:
-        - chat-service-network-1
+    volumes:
+        - database:/var/lib/mysql
 
   chat-service:
     build:
@@ -26,8 +26,7 @@ services:
         - database
     depends_on:
         - database
-    networks:
-        - chat-service-network-1
 
-networks:
-  chat-service-network-1:
+# Volumes
+volumes:
+  database:

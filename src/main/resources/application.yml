@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://database:3306/chat_db?serverTimezone=UTC&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true
+    username: junnikym
+    password: mysql_password
+
+    hikari:
+      minimum-idle: 2
+      maximum-pool-size: 4
+      connection-timeout: 5000
+      connection-init-sql: SELECT 1
+      validation-timeout: 2000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+
+      ddl-auto: update
+      naming:
+        strategy: org.hibernate.cfg.ImprovedNamingStrategy
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+
+
+      show-sql: true
+      properties:
+        hibernate:
+
+          format_sql: true
+
+          order_inserts: true
+          order_updates: true
+          jdbc:
+            batch_size: 20000
+
+          current_session_context_class: org.springframework.orm.hibernate5.SpringSessionContext
+
+          hbm2ddl:
+            import_files_sql_extractor: org.hibernate.tool.hbm2ddl.MultipleLinesSqlCommandExtractor
+
+      generate-ddl: false
+
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
