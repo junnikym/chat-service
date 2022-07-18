@@ -1,8 +1,13 @@
 package edu.junnikym.chatservice.member.config;
 
+import edu.junnikym.chatservice.member.service.PrincipalDetailsService;
 import io.jsonwebtoken.Jwt;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -16,6 +21,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletResponse;
 
@@ -29,33 +35,19 @@ public class SecurityConfig {
 	}
 
 	@Bean
-	public AccessDeniedHandler accessDeniedHandler() {
-		return (request, response, e) -> {
-			response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-			response.setContentType("text/plain;charset=UTF-8");
-			response.getWriter().write("ACCESS DENIED");
-			response.getWriter().flush();
-			response.getWriter().close();
-		};
-	}
-
-	@Bean
-	public AuthenticationEntryPoint authenticationEntryPoint() {
-		return (request, response, e) -> {
-			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-			response.setContentType("text/plain;charset=UTF-8");
-			response.getWriter().write("UNAUTHORIZED");
-			response.getWriter().flush();
-			response.getWriter().close();
-		};
-	}
-
-	@Bean
 	public SecurityFilterChain filterChain(
-			HttpSecurity http
+			HttpSecurity http,
+			PasswordEncoder passwordEncoder,
+			PrincipalDetailsService principalDetailsService
 	) throws Exception {
 
-		http.csrf().disable() //csrf 토큰 비활성화 (테스트 시 걸어두는 게 좋음)
+		AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
+		authenticationManagerBuilder.userDetailsService(principalDetailsService).passwordEncoder(passwordEncoder);
+
+		AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
+
+		http.csrf().disable()
+				.authenticationManager(authenticationManager)
 				.authorizeRequests()
 					.antMatchers("/api/*/user/**").hasAnyRole("USER", "ADMIN")
 					.anyRequest().permitAll()
@@ -63,11 +55,7 @@ public class SecurityConfig {
 				.formLogin()
 					.permitAll()
 					.and()
-				.logout()
-					.and()
-				.exceptionHandling()
-					.accessDeniedHandler(accessDeniedHandler())
-					.authenticationEntryPoint(authenticationEntryPoint());
+				.logout();
 
 		return http.build();
 	}
