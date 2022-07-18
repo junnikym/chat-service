@@ -27,11 +27,14 @@ public class Member extends DateBaseEntity {
 
 	private String password;
 
+	@Column(nullable = false)
 	private Role role;
 
 	public Member(String email, String password) {
 		this.email = email;
 		this.password = password;
+		this.role = Role.USER;
 	}
 
+	public Member () { }
 }
