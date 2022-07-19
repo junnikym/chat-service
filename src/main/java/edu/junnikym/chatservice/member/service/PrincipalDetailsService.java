@@ -1,5 +1,6 @@
 package edu.junnikym.chatservice.member.service;
 
+import edu.junnikym.chatservice.member.domain.Member;
 import edu.junnikym.chatservice.member.repository.MemberJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;
@@ -20,12 +21,12 @@ public class PrincipalDetailsService implements UserDetailsService {
 	@Override
 	public UserDetails loadUserByUsername (String email) throws UsernameNotFoundException {
 
-		var member = memberJpaRepository.findByEmail(email)
+		Member member = memberJpaRepository.findByEmail(email)
 				.orElseThrow(IllegalArgumentException::new);
 
 		return User.builder()
 				.username(email)
-				.password(passwordEncoder.encode(member.getPassword()))
+				.password(member.getPassword())
 				.roles(member.getRole().toString())
 				.build();
 	}
