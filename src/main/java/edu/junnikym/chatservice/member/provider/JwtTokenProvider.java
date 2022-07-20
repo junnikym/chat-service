@@ -1,7 +1,6 @@
 package edu.junnikym.chatservice.member.provider;
 
 import edu.junnikym.chatservice.member.domain.enums.Role;
-import edu.junnikym.chatservice.member.dto.LoginDto;
 import edu.junnikym.chatservice.member.service.PrincipalDetailsService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
@@ -12,16 +11,20 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletRequest;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
+	private final String TOKEN_PREFIX = "Bearer";
+
 	private final String SECRET_KEY = "it's secret";
+
+	private final String COOKIE_KEY = "AccessToken";
 
 	private final long ACCESS_EXP_TIME = 1000L * 60 * 30; 	// 30 min
 
@@ -31,7 +34,7 @@ public class JwtTokenProvider {
 		Date now = new Date();
 		User user = (User) authentication.getPrincipal();
 
-		return Jwts.builder()
+		return TOKEN_PREFIX+" "+Jwts.builder()
 				.setHeaderParam("typ", "ACCESS_TOKEN")
 				.setHeaderParam("alg", "HS256")
 				.setSubject(user.getUsername())
@@ -43,7 +46,8 @@ public class JwtTokenProvider {
 	}
 
 	public Authentication getAuthentication(String token) {
-		UserDetails userDetails = principalDetailsService.loadUserByUsername(this.getUserInfo(token));
+		final String email = this.getUserInfo(token);
+		final UserDetails userDetails = principalDetailsService.loadUserByUsername(email);
 		return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
 	}
 
@@ -52,11 +56,16 @@ public class JwtTokenProvider {
 				.setSigningKey(SECRET_KEY)
 				.parseClaimsJws(token)
 				.getBody()
-				.get("email");
+				.getSubject();
 	}
 
 	public String resolveToken(HttpServletRequest request) {
-		return request.getHeader("token");
+		var test = request.getCookies();
+		return Arrays.stream(test)
+				.filter(c -> c.getName().equals(COOKIE_KEY))
+				.findFirst()
+				.map(Cookie::getValue)
+				.orElse(null);
 	}
 
 	public boolean validateJwtToken(ServletRequest request, String authToken) {
@@ -73,6 +82,18 @@ public class JwtTokenProvider {
 			request.setAttribute("exception", "IllegalArgumentException");
 		}
 		return false;
+	}
+
+	public long getAccessExpTime() {
+		return ACCESS_EXP_TIME;
+	}
+
+	public String getCookieKey() {
+		return COOKIE_KEY;
+	}
+
+	public String getTokenPrefix() {
+		return TOKEN_PREFIX;
 	}
 
 }

@@ -1,9 +1,6 @@
 package edu.junnikym.chatservice.member.filter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.junnikym.chatservice.member.provider.JwtTokenProvider;
-import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
@@ -15,10 +12,10 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
-
-	private final String TOKEN_PREFIX = "Bearer";
 
 	private final JwtTokenProvider jwtTokenProvider;
 
@@ -33,13 +30,17 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 			FilterChain filterChain
 	) throws ServletException, IOException {
 
-		String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-		if(authorizationHeader == null || !authorizationHeader.startsWith(TOKEN_PREFIX)) {
+		final String tokenPrefix = jwtTokenProvider.getTokenPrefix();
+
+		final String tokenOnCookie = URLDecoder.decode(
+				jwtTokenProvider.resolveToken(request), StandardCharsets.UTF_8);
+
+		if(tokenOnCookie == null || !tokenOnCookie.startsWith(tokenPrefix)) {
 			filterChain.doFilter(request, response);
 			return;
 		}
 
-		String token = authorizationHeader.substring(TOKEN_PREFIX.length());
+		String token = tokenOnCookie.substring((tokenPrefix+" ").length());
 		Authentication authorization = jwtTokenProvider.getAuthentication(token);
 
 		try {

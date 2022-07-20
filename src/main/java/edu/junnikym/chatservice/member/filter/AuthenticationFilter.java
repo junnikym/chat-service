@@ -13,13 +13,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
-
-	private final String TOKEN_PREFIX = "Bearer";
 
 	private final JwtTokenProvider jwtTokenProvider;
 
@@ -50,11 +51,18 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 			FilterChain chain,
 			Authentication authentication
 	) throws IOException, ServletException {
-		final String accessToken = jwtTokenProvider.createAccessToken(authentication);
+		final String accessToken = URLEncoder.encode(
+				jwtTokenProvider.createAccessToken(authentication), StandardCharsets.UTF_8);
+
+		final int expTime = (int) (jwtTokenProvider.getAccessExpTime() / 1000);
+		Cookie cookie = new Cookie(jwtTokenProvider.getCookieKey(), accessToken);
+		cookie.setMaxAge(expTime);
 
 		response.setStatus(HttpStatus.OK.value());
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-		response.addHeader(HttpHeaders.AUTHORIZATION, TOKEN_PREFIX+" "+accessToken);
+		response.addCookie(cookie);
+
+		response.sendRedirect("/");
 	}
 
 	@Override
@@ -62,7 +70,5 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 		response.sendError(HttpStatus.UNAUTHORIZED.value(), failed.getMessage());
 	}
-
-
 
 }
