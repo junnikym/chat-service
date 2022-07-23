@@ -32,25 +32,27 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 
 		final String tokenPrefix = jwtTokenProvider.getTokenPrefix();
 
-		final String tokenOnCookie = URLDecoder.decode(
-				jwtTokenProvider.resolveToken(request), StandardCharsets.UTF_8);
-
-		if(tokenOnCookie == null || !tokenOnCookie.startsWith(tokenPrefix)) {
+		final String resolveToken = jwtTokenProvider.resolveToken(request);
+		if(resolveToken == null) {
 			filterChain.doFilter(request, response);
 			return;
 		}
 
-		String token = tokenOnCookie.substring((tokenPrefix+" ").length());
-		Authentication authorization = jwtTokenProvider.getAuthentication(token);
+		final String tokenOnCookie = URLDecoder.decode(resolveToken, StandardCharsets.UTF_8);
+		if(!tokenOnCookie.startsWith(tokenPrefix)) {
+			filterChain.doFilter(request, response);
+			return;
+		}
 
 		try {
+			String token = tokenOnCookie.substring((tokenPrefix+" ").length());
+			Authentication authorization = jwtTokenProvider.getAuthentication(token);
+
 			SecurityContextHolder.getContext().setAuthentication(authorization);
-			filterChain.doFilter(request, response);
-		} catch (Exception e) {
-			response.setStatus(HttpStatus.UNAUTHORIZED.value());
-			response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-			response.sendError(HttpStatus.UNAUTHORIZED.value(), e.getMessage());
 		}
+		catch (Exception e) { }
+
+		filterChain.doFilter(request, response);
 	}
 
 }
