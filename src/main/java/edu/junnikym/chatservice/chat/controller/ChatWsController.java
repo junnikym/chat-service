@@ -8,7 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class ChatController {
+@MessageMapping("/ws/chat")
+public class ChatWsController {
 
 //	@MessageMapping("/hi")
 //	@SendTo("/topic/hi")
@@ -16,9 +17,15 @@ public class ChatController {
 //		return "hi! " + message.getName();
 //	}
 
-	@MessageMapping("hi.{to}")
-	public String hi(@DestinationVariable("to") String to, HiDto message) throws Exception {
-		return "안녕! " + message.getName() + "(" + to + ")";
-	}
+//	@MessageMapping("hi.{to}")
+//	public String hi(@DestinationVariable("to") String to, HiDto message) throws Exception {
+//		return "안녕! " + message.getName() + "(" + to + ")";
+//	}
+
+//	@MessageMapping("/send")
+//	public String chat(@DestinationVariable("room") String room, ) {
+//
+//	}
+
 
 }
