@@ -1,4 +1,4 @@
-package edu.junnikym.chatservice.chat.config.domain;
+package edu.junnikym.chatservice.chat.domain;
 
 import edu.junnikym.chatservice.common.domain.DateBaseEntity;
 import edu.junnikym.chatservice.member.domain.Member;
@@ -30,5 +30,12 @@ public class Room extends DateBaseEntity {
 	}
 
 	public Room () { }
+
+	public void addParticipant (Collection<Member> member) {
+		if(member == null)
+			return;
+
+		this.participants.addAll(member);
+	}
 
 }

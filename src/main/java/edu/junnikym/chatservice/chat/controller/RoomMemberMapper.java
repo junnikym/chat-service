@@ -1,6 +1,6 @@
 package edu.junnikym.chatservice.chat.controller;
 
-import edu.junnikym.chatservice.chat.config.domain.Room;
+import edu.junnikym.chatservice.chat.domain.Room;
 import edu.junnikym.chatservice.member.domain.Member;
 import org.hibernate.annotations.GenericGenerator;
 

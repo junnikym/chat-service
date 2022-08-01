@@ -1,4 +1,4 @@
-package edu.junnikym.chatservice.chat.config.handler;
+package edu.junnikym.chatservice.chat.handler;
 
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;

@@ -1,6 +1,6 @@
 package edu.junnikym.chatservice.chat.config;
 
-import edu.junnikym.chatservice.chat.config.handler.ChatHandler;
+import edu.junnikym.chatservice.chat.handler.ChatHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketHandler;
