@@ -2,15 +2,10 @@ package edu.junnikym.chatservice.member.domain;
 
 import edu.junnikym.chatservice.common.domain.DateBaseEntity;
 import edu.junnikym.chatservice.member.domain.enums.Role;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.hibernate.annotations.GenericGenerator;
 
-import javax.annotation.processing.Generated;
 import javax.persistence.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -29,6 +24,10 @@ public class Member extends DateBaseEntity {
 
 	@Column(nullable = false)
 	private Role role;
+
+	public Member(String email) {
+		this.email = email;
+	}
 
 	public Member(String email, String password) {
 		this.email = email;
