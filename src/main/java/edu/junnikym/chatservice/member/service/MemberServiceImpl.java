@@ -8,6 +8,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+
 @Service
 @RequiredArgsConstructor
 public class MemberServiceImpl implements MemberService {
@@ -32,6 +34,11 @@ public class MemberServiceImpl implements MemberService {
 	private Member newMember(String email, String password) {
 		final String encryptedPassword = passwordEncoder.encode(password);
 		return new Member(email, encryptedPassword);
+	}
+
+	@Override
+	public Collection<Member> findAll (Collection<String> emails) {
+		return memberJpaRepository.findAllByEmailIn(emails);
 	}
 
 }
