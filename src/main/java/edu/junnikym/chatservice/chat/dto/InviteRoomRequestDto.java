@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.UUID;
 
 @Getter
@@ -11,20 +12,20 @@ public class InviteRoomRequestDto {
 
 	private UUID roomId;
 
-	private UUID ownUserId;
+	private String inviterEmail;
 
-	private Collection<String> emails;
+	private HashSet<String> emails;
 
 	public InviteRoomRequestDto (
 			UUID roomId,
-			Collection<String> emails
+			HashSet<String> emails
 	) {
 		this.roomId = roomId;
 		this.emails = emails;
 	}
 
-	public void setOwnUserId (UUID ownUserId) {
-		this.ownUserId = ownUserId;
+	public void setInviterEmail (String inviterEmail) {
+		this.inviterEmail = inviterEmail;
 	}
 
 

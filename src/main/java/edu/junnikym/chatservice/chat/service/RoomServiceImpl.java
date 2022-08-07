@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,15 +39,38 @@ public class RoomServiceImpl implements RoomService {
 	@Override
 	@Transactional
 	public void inviteRoom (InviteRoomRequestDto dto) {
-		final Room room = roomJpaRepository
-				.findById(dto.getRoomId())
-				.orElseThrow(()-> new IllegalIdentifierException("not exist room"));
+		final Room room = getRoom(dto.getRoomId());
 
-		final Collection<Member> members = memberService.findAll(dto.getEmails());
+		existsInviterInRoom(room, dto.getInviterEmail());
 
+		final Collection<Member> members = getMembersByEmail(dto.getEmails());
 		room.addParticipant(members);
 
 		roomJpaRepository.flush();
+	}
+
+	private Collection<Member> getMembersByEmail(Collection<String> emails) {
+		final Collection<Member> members = memberService.findAll(emails);
+		if(members.size() != emails.size())
+			throw new IllegalArgumentException("not exist some member");
+
+		return members;
+	}
+
+	private Room getRoom(UUID roomId) {
+		return roomJpaRepository
+				.findById(roomId)
+				.orElseThrow(()-> new IllegalIdentifierException("not exist room"));
+	}
+
+	private void existsInviterInRoom(Room room, String inverterEmail) {
+		Set<String> participants = room.getParticipants()
+				.stream()
+				.map(Member::getEmail)
+				.collect(Collectors.toSet());
+
+		if(participants.contains(inverterEmail))
+			throw new IllegalIdentifierException("not exist room");
 	}
 
 }
